@@ -3,77 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with AI</title>
+    <title>ChatGPT</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #181818;
+            display: flex;
+            height: 100vh;
+            color: #eee;
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: #0c0c0c;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
-        #chat-history {
-            height: 400px;
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
+
+        .sidebar-button {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: left;
             padding: 10px;
-            overflow-y: auto;
-        }
-        .message {
-            margin-bottom: 10px;
-            padding: 8px;
             border-radius: 5px;
         }
-        .user-message {
-            background-color: #e3f2fd;
-            margin-left: 20%;
+        .sidebar-button:hover {
+            background-color: #282828;
+            color: #fff;
         }
-        .assistant-message {
-            background-color: #f5f5f5;
-            margin-right: 20%;
+
+        #search-bar {
+            background-color: #333;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            outline: none;
+            color: #eee;
         }
-        #input-container {
+
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Rest of the CSS (existing styles) */
+        #chat-header {
+            background-color: #181818;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #chat-header h1 {
+            font-size: 20px;
+            margin: 0;
+            color: #eee;
+            font-weight: bold;
+        }
+
+        #model-name {
+            font-size: 14px;
+            color: #999;
+            margin-left: 10px;
+        }
+
+        #header-buttons {
             display: flex;
             gap: 10px;
         }
-        #user-input {
-            flex-grow: 1;
-            padding: 8px;
-        }
-        button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
+        .header-button {
+            background: none;
             border: none;
-            border-radius: 4px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .header-button:hover {
+            color: #fff;
+        }
+
+        #chat-history {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            justify-content: center;  /* Center content vertically */
+            align-items: flex-start; /* Align content to the left horizontally */
+            max-width: 1000px; /* 限制最大宽度 */
+            margin-left: 200px; /* 水平左对齐并设置左边距 */
+        }
+
+        .placeholder {
+            font-size: 20px; /* Reduced font size */
+            color: #999;
+            text-align: left; /* 改为左对齐 */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* 改为左对齐 */
+            margin-top: 50px;
+            width: 100%; /* 确保占满容器宽度 */
+        }
+
+        .placeholder img {
+          width: 60px; 
+          height: 60px; 
+          margin: 0; 
+        }
+
+        .placeholder h1 {
+          margin: 10px 0; 
+          color: #eee;
+          font-size: 36px;
+          text-align: left; 
+        }
+
+        .placeholder h2 {
+          font-size: 36px;
+          margin: 0 0 20px 0; 
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .suggestion-item {
+            background-color: #333;
+            color: #ccc;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            height: 50px;
+            width: 200px;
             cursor: pointer;
         }
-        button:hover {
-            background-color: #45a049;
+
+        .suggestion-item:hover {
+            background-color: #484848;
+        }
+
+        .suggestion-item .prompt {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 60%;
+            word-wrap: break-word;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: #3367d6;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .assistant-message {
+            background-color: #424242;
+            color: #fff;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        #input-container {
+            background-color: #181818;
+            padding: 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 0px;
+            position: relative;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            background-color: #333;
+            padding: 10px 45px 10px 15px; /* Make space for buttons inside the input */
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            color: #eee;
+        }
+        
+        #user-input::placeholder {
+          color: #aaa;
+        }
+
+        #input-container .input-button {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 22px;
+            padding: 0;
+            margin: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #input-container .input-button:hover {
+            color: #fff;
+        }
+
+        #input-container #send-button,
+        #input-container #reset-button {
+            display: none; /* Hide the original buttons */
+        }
+
+        /* Style for the send button */
+        .send-button {
+          position: absolute;
+          right: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          background-color: #444;
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          padding-right: 3px;
+        }
+
+        .send-button:hover {
+          background-color: #555;
+        }
+
+        .send-button svg {
+          fill: #ccc;
+        }
+
+        .placeholder {
+            font-size: 20px;
+            color: #999;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .disclaimer {
+          font-size: 12px;
+          color: #999;
+          text-align: center;
+          margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Chat with AI</h1>
-    <div id="chat-history"></div>
-    <div id="input-container">
-        <input type="text" id="user-input" placeholder="输入您的消息...">
-        <button onclick="sendMessage()">发送</button>
-        <button onclick="resetChat()">重置对话</button>
+    <div id="sidebar">
+        <button class="sidebar-button">➕ New Chat</button>
+        <button class="sidebar-button">🗂️ Workspace</button>
+        <input type="text" id="search-bar" placeholder="Search...">
+    </div>
+    <div id="chat-container">
+        <div id="chat-header">
+            <div>
+              <h1>
+                <span id="chat-title">New Chat</span>
+                <span id="model-name">ChatGPT:latest</span>
+              </h1>
+            </div>
+            <div id="header-buttons">
+                <button class="header-button" onclick="alert('You are one of our chosen beta testers!')">❓</button>
+            </div>
+        </div>
+        <div id="chat-history">
+            <div class="placeholder">
+              <img src="../static/logo.png" alt="LLM Logo" style="width: 80px; height: 80px; margin-bottom: 0px">
+                <h1>GPT-4o:Latest</h1>
+                <h2>How can I help you today?</h2>
+            </div>
+            <div class="suggestions">
+                <div class="suggestion-item">
+                    Overcome procrastination
+                    <div class="prompt">give me tips</div>
+                </div>
+                <div class="suggestion-item">
+                    Show me a code snippet
+                    <div class="prompt">of a website's sticky header</div>
+                </div>
+                <div class="suggestion-item">
+                    Grammar check
+                    <div class="prompt">rewrite it for better readability</div>
+                </div>
+                <div class="suggestion-item">
+                    Tell me a fun fact
+                    <div class="prompt">about the Human Empire</div>
+                </div>
+            </div>
+        </div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Try: Summarize the current webpage for me...">
+            <!-- <button class="input-button" id="voice-button" onclick="alert('Voice input clicked!')">🎤</button> -->
+            <!-- <button class="input-button" onclick="sendMessage()">⬆️</button> -->
+            <button class="send-button" onclick="sendMessage()">
+              <svg viewBox="0 0 24 24" height="24" width="24" fill="#282828">
+                <path d="M3 20v-6l8-2-8-2V4l19 8-19 8z" />
+              </svg>
+            </button>
+            <!-- <button id="send-button" onclick="sendMessage()">发送</button>
+            <button id="reset-button" onclick="resetChat()">重置对话</button> -->
+        </div>
+        <div class="disclaimer">LLMs can make mistakes. Verify important information.</div>
     </div>
 
     <script>
-        // 监听回车键
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
+        // // 监听回车键
+        // document.getElementById('user-input').addEventListener('keypress', function(e) {
+        //     if (e.key === 'Enter') {
+        //         sendMessage();
+        //     }
+        // });
 
         async function sendMessage() {
             const input = document.getElementById('user-input');
             const message = input.value.trim();
             
             if (message === '') return;
+            
+            // Hide suggestions
+            document.querySelector('.suggestions').style.display = 'none';
+            
+            // Update placeholder
+            document.querySelector('.placeholder').innerHTML = '';
             
             try {
                 const response = await fetch('/chat', {
@@ -102,7 +385,6 @@
 
         function updateChatHistory(history) {
             const chatHistory = document.getElementById('chat-history');
-            chatHistory.innerHTML = '';
             
             history.forEach(msg => {
                 const messageDiv = document.createElement('div');
@@ -124,7 +406,31 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    document.getElementById('chat-history').innerHTML = '';
+                    document.getElementById('chat-history').innerHTML = `
+                      <div class="placeholder">
+                        <img src="../static/logo.png" alt="LLM Logo" style="width: 130px; height: 130px; margin-bottom: 20px">
+                          <h1>ChatGPT:Latest</h1>
+                          How can I help you today?
+                      </div>
+                      <div class="suggestions">
+                          <div class="suggestion-item">
+                              Overcome procrastination
+                              <div class="prompt">give me tips</div>
+                          </div>
+                          <div class="suggestion-item">
+                              Show me a code snippet
+                              <div class="prompt">of a website's sticky header</div>
+                          </div>
+                          <div class="suggestion-item">
+                              Grammar check
+                              <div class="prompt">rewrite it for better readability</div>
+                          </div>
+                          <div class="suggestion-item">
+                              Tell me a fun fact
+                              <div class="prompt">about the Human Empire</div>
+                          </div>
+                      </div>
+                    `;
                     alert('对话已重置');
                 } else {
                     alert('重置对话时出错：' + data.error);
