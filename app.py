@@ -29,17 +29,20 @@ def home():
 def chat():
     if not request.is_json:
         return jsonify({"error": "Content-Type must be application/json"}), 400
-        
     data = request.get_json()
     if 'message' not in data:
         return jsonify({"error": "message field is required"}), 400
-        
     try:
-        # 应该使用 app.ask() 而不是 run()
+        # 移除重复添加系统提示的代码
         response = data_exfiltration.app.ask(data['message'])
+        # 过滤掉系统消息，只返回用户和助手的对话
+        filtered_history = [
+            msg for msg in data_exfiltration.app.messages 
+            if msg['role'] in ['user', 'assistant']
+        ]
         return jsonify({
             "response": response,
-            "history": data_exfiltration.app.messages,  # 使用 messages 替代 chat_history
+            "history": filtered_history,  # 使用过滤后的历史记录
             "queries": data_exfiltration.app.queries
         })
     except Exception as e:

@@ -339,12 +339,6 @@
     </div>
 
     <script>
-        // // 监听回车键
-        // document.getElementById('user-input').addEventListener('keypress', function(e) {
-        //     if (e.key === 'Enter') {
-        //         sendMessage();
-        //     }
-        // });
 
         async function sendMessage() {
             const input = document.getElementById('user-input');
@@ -385,14 +379,26 @@
 
         function updateChatHistory(history) {
             const chatHistory = document.getElementById('chat-history');
+            // 只获取最后两条消息（用户消息和助手回复）
+            const recentMessages = history.slice(-2);
             
-            history.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${msg.role}-message`;
-                messageDiv.textContent = msg.content;
-                chatHistory.appendChild(messageDiv);
+            recentMessages.forEach(msg => {
+                if (msg.role === 'user' || msg.role === 'assistant') {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${msg.role}-message`;
+                    let content = msg.content;
+                    if (msg.role === 'assistant') {
+                        if (content.startsWith('view') || content.startsWith('search') || 
+                            content.startsWith('memory') || content.startsWith('fetch') || 
+                            content.startsWith('e-mail')) {
+                            return;
+                        }
+                        content = content.replace(/To fulfill the user's request.*Example:.*assistant: view/s, '').trim();
+                    }
+                    messageDiv.textContent = content;
+                    chatHistory.appendChild(messageDiv);
+                }
             });
-            
             // 滚动到底部
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
