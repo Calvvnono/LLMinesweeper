@@ -12,6 +12,7 @@ class DemoApp:
 
 class ChatMLApp(DemoApp):
     TOOL_DESCRIPTIONS = {
+        "search": "search for a keyword on the current website the user is looking at",
         "view": "view the current website the user is looking at, no argument required",
         "memory": "read or write to a simple key-value memory, or retrieve a list of the keys. keys can not include "
                   "spaces.",
